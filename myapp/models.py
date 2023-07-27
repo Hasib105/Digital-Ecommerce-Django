@@ -20,3 +20,4 @@ class OrderDetail(models.Model):
     has_paid = models.BooleanField(default=False)
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now_add=True)
+    
