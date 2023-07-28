@@ -108,3 +108,10 @@ def product_delete(request, pk):
         product.delete()
         return redirect('index')
     return render(request, 'myapp/product_delete.html',{'product':product})
+
+
+def dashboard(request):
+    products= Product.objects.all()
+    return render(request,'myapp/dashboard.html',{
+        'products':products
+    })
