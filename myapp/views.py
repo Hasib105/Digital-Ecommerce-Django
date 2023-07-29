@@ -4,7 +4,7 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 import stripe , json
 from django.http import JsonResponse , HttpResponseNotFound
-from .forms import ProductForm
+from .forms import ProductForm , UserRegistrationForm
 # Create your views here.
 
 def index(request):
@@ -82,7 +82,9 @@ def create_product(request):
     if request.method == 'POST':
         product_form =ProductForm(request.POST,request.FILES)
         if product_form.is_valid():
-            new_product = product_form.save()
+            new_product = product_form.save(commit=False)
+            new_product.seller = request.user
+            new_product.save()
             return redirect('index')
     product_form = ProductForm()
     return render(request, 'myapp/create_product.html',{'product_form':product_form})
@@ -91,6 +93,8 @@ def create_product(request):
 
 def product_edit(request, pk):
     product = Product.objects.get(pk=pk)
+    if product.seller != request.user:
+        return redirect('invalid')
     if request.method == 'POST':
         product_form = ProductForm(request.POST, request.FILES, instance=product)
         if product_form.is_valid():
@@ -104,6 +108,8 @@ def product_edit(request, pk):
 
 def product_delete(request, pk):
     product = Product.objects.get(pk=pk)
+    if product.seller != request.user:
+        return redirect('invalid')
     if request.method == 'POST':
         product.delete()
         return redirect('index')
@@ -111,7 +117,32 @@ def product_delete(request, pk):
 
 
 def dashboard(request):
-    products= Product.objects.all()
+    products= Product.objects.filter(seller=request.user)
     return render(request,'myapp/dashboard.html',{
         'products':products
+    })
+
+    
+def register(request):
+    if request.method == 'POST':
+        user_form = UserRegistrationForm(request.POST)
+        new_user = user_form.save(commit=False)
+        new_user.set_password(user_form.cleaned_data['password'])
+        new_user.save()
+
+        return redirect('index')
+        
+    user_form= UserRegistrationForm()
+    return render(request,'myapp/register.html',{
+        'user_form':user_form
+    })
+
+def invalid(request):
+    return render(request,'myapp/invalid.html')
+
+
+def my_purchases(request):
+    orders = OrderDetail.objects.all() 
+    return render(request, 'myapp/purchases.html',{
+        'orders':orders
     })
