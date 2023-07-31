@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
+
+timezone.now()
 
 # Create your models here.
 
@@ -9,6 +12,8 @@ class Product(models.Model):
     description= models.CharField(max_length=100)
     price = models.FloatField()
     file = models.FileField(upload_to='uploads')
+    total_sales_amount = models.IntegerField(default=0)
+    total_sales = models.IntegerField(default=0)
 
     def __str__(self):
         return self.name

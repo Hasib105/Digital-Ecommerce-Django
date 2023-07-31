@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <title>Document</title>
   </head>
   <body>
@@ -11,7 +12,7 @@
       <div
         class="flex flex-wrap justify-between ml-5 items-center mx-auto px-4 py-2.5"
       >
-        <a href="" class="flex item-center">
+        <a href="/" class="flex item-center">
           <img
             class="h-9 m-3"
             src="https://cdn3.iconfinder.com/data/icons/catcommerce-blue/120/cart-512.png"
@@ -23,15 +24,25 @@
         </a>
 
         <div class="flex item-center">
-          <a href="" class="mr-6 text-sm font-medium text-gray-500"
+          <a
+            href="{%  url 'dashboard' %}"
+            class="mr-6 text-sm font-medium text-gray-500"
             >Dashboard</a
           >
-          <a href="" class="mr-6 text-sm font-medium text-gray-500">Sales</a>
-          <a href="" class="mr-6 text-sm font-medium text-gray-500">Order</a>
-          <a href="" class="mr-6 text-sm font-medium text-gray-500"
+          <a
+            href="{%  url 'sales' %}"
+            class="mr-6 text-sm font-medium text-gray-500"
+            >Sales</a
+          >
+          <a href="#" class="mr-6 text-sm font-medium text-gray-500">Order</a>
+          <a
+            href="{%  url 'createproduct' %}"
+            class="mr-6 text-sm font-medium text-gray-500"
             >CreateProducts</a
           >
-          <a href="" class="mr-6 text-sm font-medium text-gray-500"
+          <a
+            href="{%  url 'purchases' %}"
+            class="mr-6 text-sm font-medium text-gray-500"
             >My Purchases</a
           >
           <a

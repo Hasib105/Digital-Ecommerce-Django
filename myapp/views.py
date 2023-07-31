@@ -5,6 +5,13 @@ from django.views.decorators.csrf import csrf_exempt
 import stripe , json
 from django.http import JsonResponse , HttpResponseNotFound
 from .forms import ProductForm , UserRegistrationForm
+from django.db.models import Sum
+from django.utils import timezone
+import datetime
+
+
+
+
 # Create your views here.
 
 def index(request):
@@ -68,6 +75,14 @@ def payment_success_view(request):
     session = stripe.checkout.Session.retrieve(session_id)
     order = get_object_or_404(OrderDetail,stripe_payment_intent = session.payment_intent)
     order.has_paid = True
+
+    # updating sales stats for a product
+    product = Product.objects.get(id=order.product.id)
+    product.totla_sales_amount= product.total_sales+ int(product.price)
+    product.total_sales = product.total_sales+1
+    product.save()
+    # updating sales stats for a product
+
     order.save()
 
     return render(request, 'myapp/payment_success.html',{'order':order})
@@ -117,7 +132,12 @@ def product_delete(request, pk):
 
 
 def dashboard(request):
-    products= Product.objects.filter(seller=request.user)
+    if request.user.is_authenticated:
+        products= Product.objects.filter(seller=request.user)
+        # Render the view with the orders data
+    else:
+        return redirect(reverse('login'))
+    
     return render(request,'myapp/dashboard.html',{
         'products':products
     })
@@ -142,7 +162,48 @@ def invalid(request):
 
 
 def my_purchases(request):
-    orders = OrderDetail.objects.all() 
+    if request.user.is_authenticated:
+        orders = OrderDetail.objects.filter(seller=request.user.email)
+        # Render the view with the orders data
+    else:
+        return redirect(reverse('login'))
+
     return render(request, 'myapp/purchases.html',{
         'orders':orders
+    })
+
+
+
+def sales(request):
+    orders = OrderDetail.objects.filter(product__seller = request.user)
+    total_sales = orders.aggregate(Sum('amount'))
+
+    #365 day sales sum
+    last_year = datetime.date.today() - datetime.timedelta(days=365)
+    yearly_data = OrderDetail.objects.filter(product__seller = request.user,created_on__gt=last_year)
+    yearly_sales = yearly_data.aggregate(Sum('amount'))
+
+    #30day sales sum
+    last_month = datetime.date.today() - datetime.timedelta(days=30)
+    monthly_data = OrderDetail.objects.filter(product__seller = request.user,created_on__gt=last_month)
+    monthly_sales = monthly_data.aggregate(Sum('amount'))
+
+    #7 day sales sum
+    last_week = datetime.date.today() - datetime.timedelta(days=7)
+    weekly_data = OrderDetail.objects.filter(product__seller = request.user,created_on__gt=last_week)
+    weekly_sales = weekly_data.aggregate(Sum('amount'))
+
+    #everyday sum for the past 30 day
+    daily_sales_sums = OrderDetail.objects.filter(product__seller = request.user).values('created_on__date').order_by('created_on__date').annotate(sum=Sum('amount'))
+
+    product_sales_sums = OrderDetail.objects.filter(product__seller = request.user).values('product__name').order_by('product__name').annotate(sum=Sum('amount'))
+
+
+    return render(request,'myapp/sales.html',{
+        'total_sales':total_sales,
+        'yearly_sales':yearly_sales,
+        'monthly_sales':monthly_sales,
+        'weekly_sales':weekly_sales,
+        'daily_sales_sums':daily_sales_sums,
+        'product_sales_sums': product_sales_sums
     })
